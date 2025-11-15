@@ -1,27 +1,44 @@
-name: SonarQube Scan
+name: Build and Analyze
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  sonarqube:
+  build:
+    name: Build and analyze
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
+      # 1. Checkout your repository
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Important for Sonar analysis
+      
+      # 2. Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm install
 
-      - name: Run SonarQube Scanner
-        uses: sonarsource/sonarqube-scan-action@v2
+      # 4. Run SonarCloud scan
+      - uses: SonarSource/sonarcloud-github-action@master
         with:
-          host-url: 'http://localhost:9000'
-          login: ${{ secrets.SONAR_TOKEN }}
+          organization: "<YOUR_SONARCLOUD_ORG>"      # Replace with your SonarCloud org
+          projectKey: "sampleproject"                # Your project key
+          projectName: "sampleproject"
+          token: ${{ secrets.SONAR_TOKEN }}
+
+      # Optional: enforce quality gate
+      # - uses: SonarSource/sonarcloud-quality-gate-action@master
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   timeout-minutes: 5
